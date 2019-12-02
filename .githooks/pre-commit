@@ -1,0 +1,101 @@
+#!/bin/bash
+
+
+# Firstly check if any files have been staged for commit
+stagedFiles=`git diff --staged  --name-only`
+if [ -z "${stagedFiles-}" ]
+then
+    printf "No files staged for commit. Exiting.\n"
+    exit 1
+fi
+
+
+# Allows us to read user input below, assigns stdin to keyboard
+exec < /dev/tty
+
+if [[ $stagedFiles != *".py"* ]]; then
+  printf "\n\nNo python files found in commit,  skipping linting\n\n"
+  exit 0
+fi
+
+
+printf "\n\nUses a custom git hook for verifying the integrity of your commit."
+printf "\nThe pre-hook will run :\n"
+printf "\n1. Black - Code formatter"
+printf "\n2. Pylint"
+printf "\n3. Unit tests\n\n"
+
+printf "\nPlease be aware of how you have installed your Pylint and Black."
+printf "\nYou should make sure each of them works individually before trying to commit.\n"
+printf "\nIf any of these fail, the commit will be aborted."
+printf "\nCheck .githooks/pre-commit for details \n\n"
+
+printf "*********************\n"
+printf "BLACK - PYTHON CODE FORMATTER"
+printf "\nFormatting code with Black\n"
+
+for i in $(git diff --staged  --name-only)
+do
+    if [ ${i: -3} == ".py" ]
+    then
+        printf "\nRunning Black on python file: "
+        echo $i
+        black $i || printf "\n\nCould not run Black for file: $i. \nThis is normal if the file was deleted in the commit.\n"
+    fi
+done
+
+printf "\nBlack passed successfully\n\n"
+
+
+
+# the -e option ensures that the commit will be aborted immediately if
+# PyLint fails (= return a non-zero exit status)
+set -e
+
+printf "*********************\n"
+printf "PYLINT - LINTER\n"
+
+printf "Running pylint...\n"
+printf "If any errors occur, commit will be terminated\n"
+for i in $(git diff --staged  --name-only)
+do
+    if [ ${i: -3} == ".py" ]
+    then
+        printf "\nRunning Pylint on python file: "
+        echo $i
+        pylint $i
+    fi
+done
+printf "\nPylint passed successfully\n\n"
+
+
+printf "*********************\n"
+printf "PYTHON TESTS"
+printf '\nRunning tests\n'
+
+python -m pytest --cov=src .
+coverage html
+if [ $? -ne 0 ]; then
+    echo 'Tests failed. Aborting commit'
+    exit 1
+fi
+
+
+printf "*********************\n"
+printf "GREAT SUCCESS. \nTests, Pylint and Black succesful\n"
+printf "Running git add again for all changed files to ensure the formatted versions are committed\n"
+
+# Adding staged files that were formatted to the commit
+for i in $(git diff --staged  --name-only)
+do
+
+    if ! [ ${i: 3} == "del" ]
+    then
+      git add "$i" || printf "Could not add file $i. \nThis is normal if the file was deleted in the commit.\n"
+    fi
+done
+
+
+printf "\nPre-commit hook completed successfully"
+
+exit 0

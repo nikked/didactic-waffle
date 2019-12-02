@@ -1,0 +1,11 @@
+env/**
+**/__pycache__/**
+**/.mypy_cache/**
+*.sublime-project
+*.sublime-workspace
+*.egg-info
+*.pyc
+.venv/
+.DS_Store
+.coverage
+**/htmlcov/**
