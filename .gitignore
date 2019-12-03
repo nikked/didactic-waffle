@@ -9,4 +9,4 @@ env/**
 .DS_Store
 .coverage
 **/htmlcov/**
-./customer_ids_to_barcodes.csv
+customer_ids_to_barcodes.csv

@@ -23,8 +23,10 @@ def make_customer_ids_to_barcodes_csv_with_pandas():
     )
     output_df.to_csv("./customer_ids_to_barcodes.csv", header=["barcodes"])
 
+
 def _get_csv_as_dataframe(filepath):
     return pd.read_csv(filepath)
+
 
 def _validate_barcodes(barcodes_df):
     duplicate_in_barcodes = barcodes_df.duplicated(subset=["barcode"])
@@ -33,9 +35,7 @@ def _validate_barcodes(barcodes_df):
         logging.error("Found duplicate barcodes")
         for index, duplicate in enumerate(duplicate_in_barcodes):
             if duplicate:
-                logging.error(
-                    "Barcode: %i", int(barcodes_df.loc[index]["barcode"])
-                )
+                logging.error("Barcode: %i", int(barcodes_df.loc[index]["barcode"]))
 
     return barcodes_df.drop_duplicates(subset=["barcode"])
 

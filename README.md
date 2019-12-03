@@ -33,6 +33,6 @@ python -m pytest .
 
 ### Enable githook
 ```bash
-chmod 750 .githooks/pre-commit
+chmod 777 .githooks/pre-commit
 git config core.hooksPath .githooks
 ```

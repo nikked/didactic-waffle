@@ -73,7 +73,7 @@ printf "*********************\n"
 printf "PYTHON TESTS"
 printf '\nRunning tests\n'
 
-python -m pytest --cov=src .
+python -m pytest --cov=. .
 coverage html
 if [ $? -ne 0 ]; then
     echo 'Tests failed. Aborting commit'
