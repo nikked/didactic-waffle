@@ -6,7 +6,7 @@ from customer_ids_to_barcodes import (
     create_customer_to_tickets_csv,
     _remove_duplicate_barcodes,
     # _make_output_dataframe,
-    # _validate_orders,
+    _validate_orders,
 )
 
 
@@ -62,3 +62,24 @@ class TestValidateBarcodes:
         assert len(output_df_1) == 1
         assert output_df_1.iloc[0].values[0] == 11111111111
         assert output_df_1.iloc[0].values[1] == 10
+
+
+class TestValidateOrders:  # pylint: disable=too-few-public-methods
+    def test_validate_orders_removes_rows_without_barcodes(self) -> None:
+        mock_combined_df = pd.DataFrame(
+            [
+                [10, 1, 11111111428],
+                [11, 2, 11111111318],
+                [12, 3,],
+                [13, 4, 11111111429],
+                [14, 5, 11111111319],
+            ],
+            columns=["customer_id", "order_id", "barcode"],
+        )
+
+        mock_combined_df.set_index(["customer_id", "order_id"], inplace=True)
+
+        output_df = _validate_orders(mock_combined_df)
+        assert len(output_df) == 4
+        assert output_df.iloc[1].values[0] == 11111111318
+        assert output_df.iloc[2].values[0] == 11111111429
