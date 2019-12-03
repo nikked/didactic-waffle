@@ -8,7 +8,7 @@ from pandas import DataFrame, Series
 DATA_DIRECTORY = "./assignment_data"
 
 
-def make_customer_ids_to_barcodes_csv_with_pandas(output_filepath: str):
+def make_customer_ids_to_barcodes_csv_with_pandas(output_filepath: str) -> None:
 
     barcodes_df = _get_csv_as_dataframe(
         filepath=os.path.join(DATA_DIRECTORY, "barcodes.csv"), index="order_id"
@@ -71,7 +71,7 @@ def _series_to_int_list(barcode_series: Series) -> Sequence[int]:
     return [int(barcode) for barcode in barcode_series]
 
 
-def _write_output_df_as_csv(output_df: DataFrame, filepath: str):
+def _write_output_df_as_csv(output_df: DataFrame, filepath: str) -> None:
     output_df.to_csv(filepath, header=["barcodes"])
 
 
