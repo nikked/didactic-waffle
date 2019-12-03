@@ -5,7 +5,7 @@ import pandas as pd  # type: ignore
 from customer_ids_to_barcodes import (
     create_customer_to_tickets_csv,
     _remove_duplicate_barcodes,
-    # _make_output_dataframe,
+    _make_output_dataframe,
     _validate_orders,
 )
 
@@ -38,14 +38,13 @@ class TestValidateBarcodes:
             columns=["barcode", "order_id"],
         )
 
+        mock_bardcodes.set_index("order_id", drop=True)
+
         output_df = _remove_duplicate_barcodes(mock_bardcodes)
 
-        assert output_df.equals(
-            pd.DataFrame(
-                [[11111111111, 10], [11111111116, 14],],
-                columns=["barcode", "order_id"],
-            )
-        )
+        assert len(output_df) == 2
+        assert output_df.iloc[1].values[0] == 11111111116
+        assert output_df.iloc[1].values[1] == 14
 
     def test_empty_duplicate_removed(self) -> None:
         mock_bardcodes_1 = pd.DataFrame(
@@ -58,10 +57,13 @@ class TestValidateBarcodes:
         output_df_1 = _remove_duplicate_barcodes(mock_bardcodes_1)
         output_df_2 = _remove_duplicate_barcodes(mock_bardcodes_2)
 
-        assert output_df_1.equals(output_df_2)
         assert len(output_df_1) == 1
         assert output_df_1.iloc[0].values[0] == 11111111111
         assert output_df_1.iloc[0].values[1] == 10
+
+        assert len(output_df_2) == 1
+        assert output_df_2.iloc[0].values[0] == 11111111111
+        assert output_df_2.iloc[0].values[1] == 10
 
 
 class TestValidateOrders:  # pylint: disable=too-few-public-methods
@@ -83,3 +85,36 @@ class TestValidateOrders:  # pylint: disable=too-few-public-methods
         assert len(output_df) == 4
         assert output_df.iloc[1].values[0] == 11111111318
         assert output_df.iloc[2].values[0] == 11111111429
+
+
+class TestMakeOutputDataframe:  # pylint: disable=too-few-public-methods
+    def test_make_output_dataframe(self) -> None:
+        mock_bardcodes = pd.DataFrame(
+            [
+                [11111111111, 10],
+                [11111111112, 10],
+                [11111111113, 10],
+                [11111111114, 10],
+                [11111111116, 14],
+                [11111111117, 15],
+            ],
+            columns=["barcode", "order_id"],
+        )
+
+        mock_bardcodes.set_index("order_id", inplace=True)
+
+        mock_orders = pd.DataFrame(
+            [[10, 1], [11, 1], [14, 1], [15, 3],], columns=["order_id", "customer_id"],
+        )
+
+        mock_orders.set_index("order_id", drop=False, inplace=True)
+
+        output_df = _make_output_dataframe(mock_bardcodes, mock_orders)
+        assert len(output_df) == 3
+        assert output_df.loc[1, 10] == [
+            11111111111,
+            11111111112,
+            11111111113,
+            11111111114,
+        ]
+        assert output_df.loc[3, 15] == [11111111117]

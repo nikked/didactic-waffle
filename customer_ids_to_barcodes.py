@@ -54,7 +54,7 @@ def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
     # with customer_id's are prioritized
     sorted_barcodes_df = barcodes_df.sort_values("order_id", ascending=True)
     validated_df = sorted_barcodes_df.drop_duplicates(keep="first", subset=["barcode"])
-    return validated_df.reset_index(drop=True)
+    return validated_df
 
 
 def _make_output_dataframe(
