@@ -8,8 +8,17 @@ from pandas import DataFrame, Series
 DATA_DIRECTORY = "./assignment_data"
 
 
-def make_customer_ids_to_barcodes_csv_with_pandas(output_filepath: str) -> None:
+def make_customer_ids_to_barcodes_csv_with_pandas(
+    output_filepath: str = "./customer_ids_to_barcodes.csv"
+) -> None:
+    """
+    This function combines barcodes.csv and orders.csv into a new csv file that maps
+    customer_ids to barcodes. As a result, we can see how many individual tickets
+    a customer has across order_id's.
 
+    Args:
+        output_filepath (str): The filepath where the result csv file is stored
+    """
     barcodes_df = _get_csv_as_dataframe(
         filepath=os.path.join(DATA_DIRECTORY, "barcodes.csv"), index="order_id"
     )
@@ -47,28 +56,28 @@ def _validate_barcodes(barcodes_df: DataFrame) -> DataFrame:
 def _make_output_dataframe(
     validated_barcodes_df: DataFrame, orders_df: DataFrame
 ) -> DataFrame:
-    output_df = orders_df.join(validated_barcodes_df)
-    output_df = output_df.set_index(["customer_id", "order_id"])
-    output_df = _validate_orders(output_df)
-    output_df = output_df.groupby(["customer_id", "order_id"])["barcode"].apply(
-        _series_to_int_list
+    def _barcode_series_to_int_list(barcode_series: Series) -> Sequence[int]:
+        return [int(barcode) for barcode in barcode_series]
+
+    combined_df = orders_df.join(validated_barcodes_df)
+    combined_df.set_index(["customer_id", "order_id"], inplace=True)
+
+    validated_df = _validate_orders(combined_df)
+
+    return validated_df.groupby(["customer_id", "order_id"])["barcode"].apply(
+        _barcode_series_to_int_list
     )
-    return output_df
 
 
-def _validate_orders(output_df: DataFrame) -> DataFrame:
-    orders_without_barcodes = output_df[output_df.isnull().any(axis=1)]
+def _validate_orders(combined_df: DataFrame) -> DataFrame:
+    orders_without_barcodes = combined_df[combined_df.isnull().any(axis=1)]
 
     if not orders_without_barcodes.empty:
         logging.error("Found orders without barcodes:")
         for customer_id, order_id in orders_without_barcodes.index:
             logging.error("Customer id: %s, Order id: %s", customer_id, order_id)
 
-    return output_df.dropna()
-
-
-def _series_to_int_list(barcode_series: Series) -> Sequence[int]:
-    return [int(barcode) for barcode in barcode_series]
+    return combined_df.dropna()
 
 
 def _write_output_df_as_csv(output_df: DataFrame, filepath: str) -> None:
