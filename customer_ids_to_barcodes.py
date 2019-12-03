@@ -8,8 +8,8 @@ from pandas import DataFrame, Series
 DATA_DIRECTORY = "./assignment_data"
 
 
-def make_customer_ids_to_barcodes_csv_with_pandas(
-    output_filepath: str = "./customer_ids_to_barcodes.csv"
+def create_customer_to_tickets_csv(
+    output_filepath: str = "./customer_ids_to_barcodes.csv",
 ) -> None:
     """
     This function combines barcodes.csv and orders.csv into a new csv file that maps
@@ -22,7 +22,7 @@ def make_customer_ids_to_barcodes_csv_with_pandas(
     barcodes_df = _get_csv_as_dataframe(
         filepath=os.path.join(DATA_DIRECTORY, "barcodes.csv"), index="order_id"
     )
-    validated_barcodes_df = _validate_barcodes(barcodes_df)
+    validated_barcodes_df = _remove_duplicate_barcodes(barcodes_df)
 
     orders_df = _get_csv_as_dataframe(
         filepath=os.path.join(DATA_DIRECTORY, "orders.csv"),
@@ -31,7 +31,7 @@ def make_customer_ids_to_barcodes_csv_with_pandas(
     )
 
     output_df = _make_output_dataframe(validated_barcodes_df, orders_df)
-    _write_output_df_as_csv(output_df, filepath=output_filepath)
+    _write_output_df_as_csv(output_df, output_filepath)
 
 
 def _get_csv_as_dataframe(
@@ -41,16 +41,20 @@ def _get_csv_as_dataframe(
     return df.set_index(index, drop=drop_index_col)
 
 
-def _validate_barcodes(barcodes_df: DataFrame) -> DataFrame:
-    duplicate_in_barcodes = barcodes_df.duplicated(subset=["barcode"])
+def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
 
-    if any(duplicate_in_barcodes):
-        logging.error("Found duplicate barcodes")
-        for index, duplicate in enumerate(duplicate_in_barcodes):
+    if any(barcodes_df.duplicated(subset=["barcode"])):
+        logging.error("Found duplicated barcodes:")
+
+        for index, duplicate in enumerate(barcodes_df.duplicated(subset=["barcode"])):
             if duplicate:
                 logging.error("Barcode: %i", int(barcodes_df.iloc[index]["barcode"]))
 
-    return barcodes_df.drop_duplicates(subset=["barcode"])
+    # Sorting the DataFrame ensures that the rows
+    # with customer_id's are kept
+    sorted_barcodes_df = barcodes_df.sort_values("order_id", ascending=True)
+    validated_df = sorted_barcodes_df.drop_duplicates(keep="first", subset=["barcode"])
+    return validated_df.reset_index(drop=True)
 
 
 def _make_output_dataframe(
@@ -70,6 +74,7 @@ def _make_output_dataframe(
 
 
 def _validate_orders(combined_df: DataFrame) -> DataFrame:
+
     orders_without_barcodes = combined_df[combined_df.isnull().any(axis=1)]
 
     if not orders_without_barcodes.empty:
@@ -80,11 +85,9 @@ def _validate_orders(combined_df: DataFrame) -> DataFrame:
     return combined_df.dropna()
 
 
-def _write_output_df_as_csv(output_df: DataFrame, filepath: str) -> None:
-    output_df.to_csv(filepath, header=["barcodes"])
+def _write_output_df_as_csv(output_df: DataFrame, output_filepath: str) -> None:
+    output_df.to_csv(output_filepath, header=["barcodes"])
 
 
 if __name__ == "__main__":
-    make_customer_ids_to_barcodes_csv_with_pandas(
-        output_filepath="./customer_ids_to_barcodes.csv"
-    )
+    create_customer_to_tickets_csv(output_filepath="./customer_ids_to_barcodes.csv")
