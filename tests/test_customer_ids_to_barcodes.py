@@ -30,10 +30,10 @@ class TestValidateBarcodes:
     def test_duplicates_removed(self) -> None:
         mock_bardcodes = pd.DataFrame(
             [
-                ["11111111111", 10],
-                ["11111111111", 11],
-                ["11111111116", 14],
-                ["11111111116", 15],
+                [11111111111, 10],
+                [11111111111, 11],
+                [11111111116, 14],
+                [11111111116, 15],
             ],
             columns=["barcode", "order_id"],
         )
@@ -42,17 +42,17 @@ class TestValidateBarcodes:
 
         assert output_df.equals(
             pd.DataFrame(
-                [["11111111111", 10], ["11111111116", 14],],
+                [[11111111111, 10], [11111111116, 14],],
                 columns=["barcode", "order_id"],
             )
         )
 
     def test_empty_duplicate_removed(self) -> None:
         mock_bardcodes_1 = pd.DataFrame(
-            [["11111111111", 10], ["11111111111",],], columns=["barcode", "order_id"],
+            [[11111111111, 10], [11111111111,],], columns=["barcode", "order_id"],
         )
         mock_bardcodes_2 = pd.DataFrame(
-            [["11111111111",], ["11111111111", 10],], columns=["barcode", "order_id"],
+            [[11111111111,], [11111111111, 10],], columns=["barcode", "order_id"],
         )
 
         output_df_1 = _remove_duplicate_barcodes(mock_bardcodes_1)
@@ -60,5 +60,5 @@ class TestValidateBarcodes:
 
         assert output_df_1.equals(output_df_2)
         assert len(output_df_1) == 1
-        assert output_df_1.iloc[0].values[0] == "11111111111"
+        assert output_df_1.iloc[0].values[0] == 11111111111
         assert output_df_1.iloc[0].values[1] == 10

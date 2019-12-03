@@ -51,7 +51,7 @@ def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
                 logging.error("Barcode: %i", int(barcodes_df.iloc[index]["barcode"]))
 
     # Sorting the DataFrame ensures that the rows
-    # with customer_id's are kept
+    # with customer_id's are prioritized
     sorted_barcodes_df = barcodes_df.sort_values("order_id", ascending=True)
     validated_df = sorted_barcodes_df.drop_duplicates(keep="first", subset=["barcode"])
     return validated_df.reset_index(drop=True)
