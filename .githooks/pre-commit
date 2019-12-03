@@ -22,8 +22,9 @@ fi
 printf "\n\nUses a custom git hook for verifying the integrity of your commit."
 printf "\nThe pre-hook will run :\n"
 printf "\n1. Black - Code formatter"
-printf "\n2. Pylint"
-printf "\n3. Unit tests\n\n"
+printf "\n2. Mypy - Type checker"
+printf "\n3. Pylint"
+printf "\n4. Unit tests\n\n"
 
 printf "\nPlease be aware of how you have installed your Pylint and Black."
 printf "\nYou should make sure each of them works individually before trying to commit.\n"
@@ -45,6 +46,24 @@ do
 done
 
 printf "\nBlack passed successfully\n\n"
+
+
+printf "*********************\n"
+printf "MYPY - TYPE CHECKER\n"
+
+printf "Running mypy for src"
+printf "\nIf any errors occur, commit will be terminated\n"
+mypy_src_output=`mypy .`
+
+if ! [ -z "$mypy_src_output" ]
+then
+      printf "ERROR: Mypy failed, ignoring commit\nPlease fix the errors below:\n\n"
+      echo $mypy_src_output
+      exit 1
+fi
+
+
+printf "\nMypy passed successfully\n\n"
 
 
 

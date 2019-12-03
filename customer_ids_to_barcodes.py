@@ -1,7 +1,9 @@
 import os
 import logging
-import pandas as pd
+from typing import Sequence
 
+import pandas as pd  # type: ignore
+from pandas import DataFrame, Series
 
 DATA_DIRECTORY = "./assignment_data"
 
@@ -24,11 +26,11 @@ def make_customer_ids_to_barcodes_csv_with_pandas():
     output_df.to_csv("./customer_ids_to_barcodes.csv", header=["barcodes"])
 
 
-def _get_csv_as_dataframe(filepath):
+def _get_csv_as_dataframe(filepath: str) -> DataFrame:
     return pd.read_csv(filepath)
 
 
-def _validate_barcodes(barcodes_df):
+def _validate_barcodes(barcodes_df: DataFrame) -> DataFrame:
     duplicate_in_barcodes = barcodes_df.duplicated(subset=["barcode"])
 
     if any(duplicate_in_barcodes):
@@ -40,7 +42,7 @@ def _validate_barcodes(barcodes_df):
     return barcodes_df.drop_duplicates(subset=["barcode"])
 
 
-def _validate_orders(output_df):
+def _validate_orders(output_df: DataFrame) -> DataFrame:
     orders_without_barcodes = output_df[output_df.isnull().any(axis=1)]
 
     if not orders_without_barcodes.empty:
@@ -51,7 +53,7 @@ def _validate_orders(output_df):
     return output_df.dropna()
 
 
-def _series_to_int_list(barcode_series):
+def _series_to_int_list(barcode_series: Series) -> Sequence[int]:
     return [int(barcode) for barcode in barcode_series]
 
 

@@ -3,3 +3,4 @@ pylint==2.3.0
 pytest==5.3.1
 pytest-cov==2.8.1
 pandas==0.25.3
+mypy==0.711
