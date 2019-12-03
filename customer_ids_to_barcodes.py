@@ -18,16 +18,18 @@ def make_customer_ids_to_barcodes_csv_with_pandas(output_filepath: str):
     orders_df = _get_csv_as_dataframe(
         filepath=os.path.join(DATA_DIRECTORY, "orders.csv"),
         index="order_id",
-        drop=False,
+        drop_index_col=False,
     )
 
     output_df = _make_output_dataframe(validated_barcodes_df, orders_df)
     _write_output_df_as_csv(output_df, filepath=output_filepath)
 
 
-def _get_csv_as_dataframe(filepath: str, index: str, drop=True) -> DataFrame:
+def _get_csv_as_dataframe(
+    filepath: str, index: str, drop_index_col: bool = True
+) -> DataFrame:
     df = pd.read_csv(filepath)
-    return df.set_index(index, drop=drop)
+    return df.set_index(index, drop=drop_index_col)
 
 
 def _validate_barcodes(barcodes_df: DataFrame) -> DataFrame:
