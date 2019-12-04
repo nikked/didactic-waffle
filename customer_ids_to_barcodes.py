@@ -2,7 +2,7 @@ import os
 import logging
 
 import pandas as pd
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
 DATA_DIRECTORY = "./assignment_data"
 
@@ -29,8 +29,11 @@ def create_customer_to_tickets_csv(
         drop_index_col=False,
     )
 
-    output_df = _make_output_dataframe(validated_barcodes_df, orders_df)
-    _write_output_df_as_csv(output_df, output_filepath)
+    output_series = _make_output_series(validated_barcodes_df, orders_df)
+
+    _log_customers_that_bought_most_tickets(output_series, no_of_customers=5)
+
+    _write_output_series_as_csv(output_series, output_filepath)
 
 
 def _get_csv_as_dataframe(
@@ -56,9 +59,9 @@ def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
     return validated_df
 
 
-def _make_output_dataframe(
+def _make_output_series(
     validated_barcodes_df: DataFrame, orders_df: DataFrame
-) -> DataFrame:
+) -> Series:
 
     combined_df = orders_df.join(validated_barcodes_df)
     combined_df.set_index(["customer_id", "order_id"], inplace=True)
@@ -82,9 +85,33 @@ def _validate_orders(combined_df: DataFrame) -> DataFrame:
     return combined_df.dropna()
 
 
-def _write_output_df_as_csv(output_df: DataFrame, output_filepath: str) -> None:
-    output_df.to_csv(output_filepath, header=["barcodes"])
+def _log_customers_that_bought_most_tickets(
+    output_series: Series, no_of_customers: int = 5
+) -> None:
+
+    customer_to_tickets_df = pd.DataFrame(output_series)
+
+    customer_to_tickets_df["no_of_tickets"] = customer_to_tickets_df["barcode"].apply(
+        len
+    )
+    customer_to_tickets_df = customer_to_tickets_df.groupby(["customer_id"]).sum()
+    customer_to_tickets_df.sort_values(
+        by="no_of_tickets", inplace=True, ascending=False
+    )
+
+    logging.info("Customers with most tickets bought:")
+    for customer_id in customer_to_tickets_df.index[:no_of_customers]:
+        logging.info(
+            "Customer id: %s, Amount of tickets: %s",
+            customer_id,
+            customer_to_tickets_df.loc[customer_id][0],
+        )
+
+
+def _write_output_series_as_csv(output_series: DataFrame, output_filepath: str) -> None:
+    output_series.to_csv(output_filepath, header=["barcodes"])
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     create_customer_to_tickets_csv(output_filepath="./customer_ids_to_barcodes.csv")
