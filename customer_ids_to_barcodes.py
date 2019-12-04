@@ -1,6 +1,7 @@
 import os
 import logging
 
+import numpy as np
 import pandas as pd
 from pandas import DataFrame, Series
 
@@ -46,6 +47,7 @@ def _get_csv_as_dataframe(
 def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
 
     if any(barcodes_df.duplicated(subset=["barcode"])):
+        logging.error("*" * 20)
         logging.error("Found duplicated barcodes:")
 
         for index, duplicate in enumerate(barcodes_df.duplicated(subset=["barcode"])):
@@ -55,14 +57,27 @@ def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
     # Sorting the DataFrame ensures that the rows
     # with customer_id's are prioritized
     sorted_barcodes_df = barcodes_df.sort_values("order_id", ascending=True)
-    validated_df = sorted_barcodes_df.drop_duplicates(keep="first", subset=["barcode"])
-    return validated_df
+    validated_barcodes_df = sorted_barcodes_df.drop_duplicates(
+        keep="first", subset=["barcode"]
+    )
+
+    _log_amount_of_unused_barcodes(validated_barcodes_df)
+    return validated_barcodes_df
+
+
+def _log_amount_of_unused_barcodes(validated_df: DataFrame) -> None:
+    try:
+        nan_indexes = validated_df.loc[np.nan]
+        logging.error("*" * 20)
+        logging.info("Amount of unused barcodes: %i", len(nan_indexes))
+
+    except (KeyError, TypeError):
+        pass
 
 
 def _make_output_series(
     validated_barcodes_df: DataFrame, orders_df: DataFrame
 ) -> Series:
-
     combined_df = orders_df.join(validated_barcodes_df)
     combined_df.set_index(["customer_id", "order_id"], inplace=True)
 
@@ -78,6 +93,7 @@ def _validate_orders(combined_df: DataFrame) -> DataFrame:
     orders_without_barcodes = combined_df[combined_df.isnull().any(axis=1)]
 
     if not orders_without_barcodes.empty:
+        logging.error("*" * 20)
         logging.error("Found orders without barcodes:")
         for customer_id, order_id in orders_without_barcodes.index:
             logging.error("Customer id: %s, Order id: %s", customer_id, order_id)
@@ -99,6 +115,7 @@ def _log_customers_that_bought_most_tickets(
         by="no_of_tickets", inplace=True, ascending=False
     )
 
+    logging.info("*" * 20)
     logging.info("Customers with most tickets bought:")
     for customer_id in customer_to_tickets_df.index[:no_of_customers]:
         logging.info(
