@@ -24,17 +24,23 @@ def create_customer_to_tickets_csv(
     )
     validated_barcodes_df = _remove_duplicate_barcodes(barcodes_df)
 
+    _log_the_amount_of_unused_barcodes(validated_barcodes_df)
+
     orders_df = _get_csv_as_dataframe(
         filepath=os.path.join(DATA_DIRECTORY, "orders.csv"),
         index="order_id",
         drop_index_col=False,
     )
 
-    output_series = _make_output_series(validated_barcodes_df, orders_df)
+    customers_to_barcodes_series = _make_customers_to_barcodes_series(
+        validated_barcodes_df, orders_df
+    )
 
-    _log_customers_that_bought_most_tickets(output_series, no_of_customers=5)
+    _log_customers_that_bought_most_tickets(
+        customers_to_barcodes_series, no_of_customers=5
+    )
 
-    _write_output_series_as_csv(output_series, output_filepath)
+    _write_output_as_csv(customers_to_barcodes_series, output_filepath)
 
 
 def _get_csv_as_dataframe(
@@ -61,11 +67,10 @@ def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
         keep="first", subset=["barcode"]
     )
 
-    _log_amount_of_unused_barcodes(validated_barcodes_df)
     return validated_barcodes_df
 
 
-def _log_amount_of_unused_barcodes(validated_df: DataFrame) -> None:
+def _log_the_amount_of_unused_barcodes(validated_df: DataFrame) -> None:
     try:
         nan_indexes = validated_df.loc[np.nan]
         logging.error("*" * 20)
@@ -75,7 +80,7 @@ def _log_amount_of_unused_barcodes(validated_df: DataFrame) -> None:
         pass
 
 
-def _make_output_series(
+def _make_customers_to_barcodes_series(
     validated_barcodes_df: DataFrame, orders_df: DataFrame
 ) -> Series:
     combined_df = orders_df.join(validated_barcodes_df)
@@ -125,7 +130,7 @@ def _log_customers_that_bought_most_tickets(
         )
 
 
-def _write_output_series_as_csv(output_series: DataFrame, output_filepath: str) -> None:
+def _write_output_as_csv(output_series: DataFrame, output_filepath: str) -> None:
     output_series.to_csv(output_filepath, header=["barcodes"])
 
 

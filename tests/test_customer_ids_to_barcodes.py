@@ -6,7 +6,7 @@ import pandas as pd
 from customer_ids_to_barcodes import (
     create_customer_to_tickets_csv,
     _remove_duplicate_barcodes,
-    _make_output_series,
+    _make_customers_to_barcodes_series,
     _validate_orders,
 )
 
@@ -94,8 +94,8 @@ class TestValidateOrders:  # pylint: disable=too-few-public-methods
         assert output_df.iloc[2].values[0] == 11_111_111_429
 
 
-class TestMakeOutputDataframe:  # pylint: disable=too-few-public-methods
-    def test_make_output_series(self) -> None:
+class TestMakeCustomersToBarcodesSeries:  # pylint: disable=too-few-public-methods
+    def test_make_customers_to_barcodes_series(self) -> None:
         mock_bardcodes = pd.DataFrame(
             [
                 [11_111_111_111, 10],
@@ -116,7 +116,7 @@ class TestMakeOutputDataframe:  # pylint: disable=too-few-public-methods
 
         mock_orders.set_index("order_id", drop=False, inplace=True)
 
-        output_df = _make_output_series(mock_bardcodes, mock_orders)
+        output_df = _make_customers_to_barcodes_series(mock_bardcodes, mock_orders)
         assert len(output_df) == 3
         assert output_df.loc[1, 10] == [
             11_111_111_111,
