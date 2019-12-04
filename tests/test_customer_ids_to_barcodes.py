@@ -1,7 +1,7 @@
 import os
 import json
 from time import time
-import pandas as pd  # type: ignore
+import pandas as pd
 
 from customer_ids_to_barcodes import (
     create_customer_to_tickets_csv,

@@ -1,7 +1,7 @@
 import os
 import logging
 
-import pandas as pd  # type: ignore
+import pandas as pd
 from pandas import DataFrame
 
 DATA_DIRECTORY = "./assignment_data"
