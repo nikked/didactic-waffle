@@ -1,9 +1,8 @@
 import os
 import logging
-from typing import Sequence
 
 import pandas as pd  # type: ignore
-from pandas import DataFrame, Series
+from pandas import DataFrame
 
 DATA_DIRECTORY = "./assignment_data"
 
@@ -60,8 +59,6 @@ def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
 def _make_output_dataframe(
     validated_barcodes_df: DataFrame, orders_df: DataFrame
 ) -> DataFrame:
-    def _barcode_series_to_int_list(barcode_series: Series) -> Sequence[int]:
-        return [int(barcode) for barcode in barcode_series]
 
     combined_df = orders_df.join(validated_barcodes_df)
     combined_df.set_index(["customer_id", "order_id"], inplace=True)
@@ -69,7 +66,7 @@ def _make_output_dataframe(
     validated_df = _validate_orders(combined_df)
 
     return validated_df.groupby(["customer_id", "order_id"])["barcode"].apply(
-        _barcode_series_to_int_list
+        lambda barcode_series: [int(barcode) for barcode in barcode_series]
     )
 
 
