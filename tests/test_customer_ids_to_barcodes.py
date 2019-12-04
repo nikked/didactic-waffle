@@ -1,4 +1,5 @@
 import os
+import json
 from time import time
 import pandas as pd  # type: ignore
 
@@ -17,6 +18,16 @@ class TestCreateCustomerToTicketsCsv:  # pylint: disable=too-few-public-methods
         test_filepath = os.path.join("tests", test_filename)
 
         create_customer_to_tickets_csv(test_filepath)
+        output_df = pd.read_csv(test_filepath)
+        output_df.set_index("order_id", inplace=True)
+
+        assert len(output_df) == 204
+        assert output_df.loc[193][0] == 4
+        assert set(json.loads(output_df.loc[193][1])) == {
+            11111111297,
+            11111111380,
+            11111111614,
+        }
 
         if os.path.exists(test_filepath):
             os.remove(test_filepath)
