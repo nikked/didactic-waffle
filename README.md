@@ -1,6 +1,10 @@
 # CSV transformer
 
 
+## Requirements and installation
+* Python 3.7 or newer
+* `pip install -r requirements.txt`
+
 ## Input
 #### orders.csv:
 *order_id, customer_id*

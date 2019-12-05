@@ -2,12 +2,14 @@ import os
 import json
 from time import time
 import pandas as pd
+from pandas import Series
 
 from customer_ids_to_barcodes import (
     create_customer_to_tickets_csv,
     _remove_duplicate_barcodes,
     _make_customers_to_barcodes_series,
     _validate_orders,
+    _log_the_amount_of_unused_barcodes,
 )
 
 
@@ -71,6 +73,60 @@ class TestValidateBarcodes:
         output_df_2 = _remove_duplicate_barcodes(mock_bardcodes_2)
 
         assert output_df_1.equals(output_df_2)
+
+
+class TestLogTheAmountOfUnusedBarcodes:
+    def test_barcodes_without_order_ids_returned(self) -> None:
+        mock_bardcodes = pd.DataFrame(
+            [
+                [11_111_111_111, 10],
+                [11_111_111_111, 11],
+                [11_111_111_116, 14],
+                [11_111_111_116,],
+            ],
+            columns=["barcode", "order_id"],
+        )
+        mock_bardcodes.set_index("order_id", drop=True, inplace=True)
+
+        response = _log_the_amount_of_unused_barcodes(mock_bardcodes)
+
+        assert isinstance(response, Series)
+        assert len(response) == 1
+        assert response.iloc[0] == 11_111_111_116
+
+    def test_type_error_raised_if_fully_int_index(self) -> None:
+        mock_bardcodes = pd.DataFrame(
+            [
+                [11_111_111_111, 10],
+                [11_111_111_111, 11],
+                [11_111_111_116, 14],
+                [11_111_111_116, 15],
+            ],
+            columns=["barcode", "order_id"],
+        )
+
+        mock_bardcodes.set_index("order_id", drop=True, inplace=True)
+
+        response = _log_the_amount_of_unused_barcodes(mock_bardcodes)
+
+        assert isinstance(response, TypeError)
+
+    def test_key_error_raised_if_no_nans(self) -> None:
+        mock_bardcodes = pd.DataFrame(
+            [
+                [11_111_111_111, 10.0],
+                [11_111_111_111, 11.0],
+                [11_111_111_116, 14.0],
+                [11_111_111_116, 15.0],
+            ],
+            columns=["barcode", "order_id"],
+        )
+
+        mock_bardcodes.set_index("order_id", drop=True, inplace=True)
+
+        response = _log_the_amount_of_unused_barcodes(mock_bardcodes)
+
+        assert isinstance(response, KeyError)
 
 
 class TestValidateOrders:  # pylint: disable=too-few-public-methods

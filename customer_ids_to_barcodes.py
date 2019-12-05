@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -53,7 +54,6 @@ def _get_csv_as_dataframe(
 def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
 
     if any(barcodes_df.duplicated(subset=["barcode"])):
-        logging.error("*" * 20)
         logging.error("Found duplicated barcodes:")
 
         for index, duplicate in enumerate(barcodes_df.duplicated(subset=["barcode"])):
@@ -70,14 +70,16 @@ def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
     return validated_barcodes_df
 
 
-def _log_the_amount_of_unused_barcodes(validated_df: DataFrame) -> None:
+def _log_the_amount_of_unused_barcodes(
+    validated_barcodes_df: DataFrame,
+) -> Union[Series, Exception]:
     try:
-        nan_indexes = validated_df.loc[np.nan]
-        logging.error("*" * 20)
+        nan_indexes = validated_barcodes_df.loc[np.nan]
         logging.info("Amount of unused barcodes: %i", len(nan_indexes))
+        return nan_indexes
 
-    except (KeyError, TypeError):
-        pass
+    except (KeyError, TypeError) as exception:
+        return exception
 
 
 def _make_customers_to_barcodes_series(
@@ -98,7 +100,6 @@ def _validate_orders(combined_df: DataFrame) -> DataFrame:
     orders_without_barcodes = combined_df[combined_df.isnull().any(axis=1)]
 
     if not orders_without_barcodes.empty:
-        logging.error("*" * 20)
         logging.error("Found orders without barcodes:")
         for customer_id, order_id in orders_without_barcodes.index:
             logging.error("Customer id: %s, Order id: %s", customer_id, order_id)
@@ -120,7 +121,6 @@ def _log_customers_that_bought_most_tickets(
         by="no_of_tickets", inplace=True, ascending=False
     )
 
-    logging.info("*" * 20)
     logging.info("Customers with most tickets bought:")
     for customer_id in customer_to_tickets_df.index[:no_of_customers]:
         logging.info(
@@ -131,6 +131,7 @@ def _log_customers_that_bought_most_tickets(
 
 
 def _write_output_as_csv(output_series: DataFrame, output_filepath: str) -> None:
+    logging.info("Writing output to filepath: %s", output_filepath)
     output_series.to_csv(output_filepath, header=["barcodes"])
 
 
