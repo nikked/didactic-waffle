@@ -1,3 +1,4 @@
+import argparse
 import os
 import logging
 from typing import Union
@@ -11,6 +12,7 @@ DATA_DIRECTORY = "./assignment_data"
 
 def create_customer_to_tickets_csv(
     output_filepath: str = "./customer_ids_to_barcodes.csv",
+    keep_barcodes_with_order_ids: bool = True,
 ) -> None:
     """
     This function combines barcodes.csv and orders.csv into a new csv file that maps
@@ -27,7 +29,9 @@ def create_customer_to_tickets_csv(
     barcodes_df = _get_csv_as_dataframe(
         filepath=os.path.join(DATA_DIRECTORY, "barcodes.csv"), index="order_id"
     )
-    validated_barcodes_df = _remove_duplicate_barcodes(barcodes_df)
+    validated_barcodes_df = _remove_duplicate_barcodes(
+        barcodes_df, keep_barcodes_with_order_ids
+    )
 
     _log_the_amount_of_unused_barcodes(validated_barcodes_df)
 
@@ -55,7 +59,9 @@ def _get_csv_as_dataframe(
     return df.set_index(index, drop=drop_index_col)
 
 
-def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
+def _remove_duplicate_barcodes(
+    barcodes_df: DataFrame, keep_barcodes_with_order_ids: bool = True
+) -> DataFrame:
 
     duplicate_barcodes_series = barcodes_df.duplicated(subset=["barcode"])
 
@@ -71,10 +77,11 @@ def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
                     "Duplicate barcode: %i", int(barcodes_df.iloc[index]["barcode"])
                 )
 
-    # Sorting the DataFrame ensures that the rows without order_id's will be last.
-    # Since we are keeping the first instance of a duplicate barcode, the kept barcode
-    # is guaranteed to be the one with an order_id (if such an barcode exists)
-    sorted_barcodes_df = barcodes_df.sort_values("order_id", ascending=True)
+    # Sorting the DataFrame enables us to choose whether we want to prioritize
+    # barcodes with order_ids or vice-versa. By default, NaNs will be placed
+    # last and will be deleted if a duplicate is found.
+    na_position = "last" if keep_barcodes_with_order_ids else "first"
+    sorted_barcodes_df = barcodes_df.sort_values("order_id", na_position=na_position)
     validated_barcodes_df = sorted_barcodes_df.drop_duplicates(
         keep="first", subset=["barcode"]
     )
@@ -151,4 +158,28 @@ def _write_output_as_csv(output_series: DataFrame, output_filepath: str) -> None
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    create_customer_to_tickets_csv(output_filepath="./customer_ids_to_barcodes.csv")
+
+    PARSER = argparse.ArgumentParser(description="Customer ids to barcodes")
+    PARSER.add_argument(
+        "-pb",
+        "--prioritize_barcodes_without_order_ids",
+        action="store_false",
+        default=True,
+        help="""Barcodes should be unique and duplicates will be dropped by the
+        process. By default the duplicate barcodes without an order_id will be
+        prioritized in dropping. If this option is used, the barcodes with
+        order_ids will be dropped instead.""",
+    )
+    PARSER.add_argument(
+        "-o",
+        "--output_filepath",
+        type=str,
+        default="./customer_ids_to_barcodes.csv",
+        help="The filepath where the output csv will be saved",
+    )
+    ARGS = PARSER.parse_args()
+
+    create_customer_to_tickets_csv(
+        output_filepath=ARGS.output_filepath,
+        keep_barcodes_with_order_ids=ARGS.prioritize_barcodes_without_order_ids,
+    )
