@@ -66,7 +66,7 @@ def _remove_duplicate_barcodes(
 
     if any(duplicate_barcodes_series):
         logging.error(
-            "Found %i duplicated barcodes. The barcodes without an associated order_id will be prioritized for deletion",
+            "Found %i duplicated barcodes:",
             len([barcode for barcode in duplicate_barcodes_series if barcode]),
         )
 
