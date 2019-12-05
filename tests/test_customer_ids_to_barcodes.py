@@ -2,7 +2,7 @@ import os
 import json
 from time import time
 import pandas as pd
-from pandas import Series
+from pandas import Series, DataFrame
 
 from customer_ids_to_barcodes import (
     create_customer_to_tickets_csv,
@@ -10,6 +10,7 @@ from customer_ids_to_barcodes import (
     _make_customers_to_barcodes_series,
     _validate_orders,
     _log_the_amount_of_unused_barcodes,
+    _log_customers_that_bought_most_tickets,
 )
 
 
@@ -39,7 +40,7 @@ class TestCreateCustomerToTicketsCsv:  # pylint: disable=too-few-public-methods
             assert False
 
 
-class TestValidateBarcodes:
+class TestRemoveDuplicateBarcodes:
     def test_duplicates_removed(self) -> None:
         mock_bardcodes = pd.DataFrame(
             [
@@ -181,3 +182,31 @@ class TestMakeCustomersToBarcodesSeries:  # pylint: disable=too-few-public-metho
             11_111_111_114,
         ]
         assert output_df.loc[3, 15] == [11_111_111_117]
+
+
+class TestLogCustomersThatBoughtMostTickets:  # pylint: disable=too-few-public-methods
+    def test_log_customers_that_bought_most_tickets(self) -> None:
+
+        mock_index = pd.MultiIndex.from_tuples(
+            [(4, 193), (4, 203), (5, 194), (6, 195), (5, 204),],
+            names=["customer_id", "order_id"],
+        )
+
+        mock_series = pd.Series(
+            [
+                [11_111_111_380, 11_111_111_297, 11_111_111_614, 11_111_111_623],
+                [11_111_111_624, 11_111_111_307, 11_111_111_390],
+                [11_111_111_381, 11_111_111_298],
+                [11_111_111_308, 11_111_111_625, 11_111_111_391],
+                [11_111_111_382, 11_111_111_299, 11_111_111_616],
+            ],
+            index=mock_index,
+            name="barcode",
+        )
+
+        customer_to_barcodes_df = _log_customers_that_bought_most_tickets(mock_series)
+
+        assert isinstance(customer_to_barcodes_df, DataFrame)
+        assert customer_to_barcodes_df.loc[4][0] == 7
+        assert customer_to_barcodes_df.loc[5][0] == 5
+        assert customer_to_barcodes_df.loc[6][0] == 3

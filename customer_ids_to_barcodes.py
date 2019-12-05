@@ -108,26 +108,28 @@ def _validate_orders(combined_df: DataFrame) -> DataFrame:
 
 
 def _log_customers_that_bought_most_tickets(
-    output_series: Series, no_of_customers: int = 5
-) -> None:
+    customers_to_barcodes_series: Series, no_of_customers: int = 5
+) -> DataFrame:
 
-    customer_to_tickets_df = pd.DataFrame(output_series)
+    customer_to_barcodes_df = pd.DataFrame(customers_to_barcodes_series)
 
-    customer_to_tickets_df["no_of_tickets"] = customer_to_tickets_df["barcode"].apply(
+    customer_to_barcodes_df["no_of_tickets"] = customer_to_barcodes_df["barcode"].apply(
         len
     )
-    customer_to_tickets_df = customer_to_tickets_df.groupby(["customer_id"]).sum()
-    customer_to_tickets_df.sort_values(
+    customer_to_barcodes_df = customer_to_barcodes_df.groupby(["customer_id"]).sum()
+    customer_to_barcodes_df.sort_values(
         by="no_of_tickets", inplace=True, ascending=False
     )
 
     logging.info("Customers with most tickets bought:")
-    for customer_id in customer_to_tickets_df.index[:no_of_customers]:
+    for customer_id in customer_to_barcodes_df.index[:no_of_customers]:
         logging.info(
             "Customer id: %s, Amount of tickets: %s",
             customer_id,
-            customer_to_tickets_df.loc[customer_id][0],
+            customer_to_barcodes_df.loc[customer_id][0],
         )
+
+    return customer_to_barcodes_df
 
 
 def _write_output_as_csv(output_series: DataFrame, output_filepath: str) -> None:
