@@ -8,7 +8,7 @@ from customer_ids_to_barcodes import (
     create_customer_to_tickets_csv,
     _remove_duplicate_barcodes,
     _make_customers_to_barcodes_series,
-    _validate_orders,
+    _remove_orders_without_barcodes,
     _log_the_amount_of_unused_barcodes,
     _log_customers_that_bought_most_tickets,
 )
@@ -131,7 +131,7 @@ class TestLogTheAmountOfUnusedBarcodes:
 
 
 class TestValidateOrders:  # pylint: disable=too-few-public-methods
-    def test_validate_orders_removes_rows_without_barcodes(self) -> None:
+    def test_remove_orders_without_barcodes_removes_rows_without_barcodes(self) -> None:
         mock_combined_df = pd.DataFrame(
             [
                 [10, 1, 11_111_111_428],
@@ -145,7 +145,7 @@ class TestValidateOrders:  # pylint: disable=too-few-public-methods
 
         mock_combined_df.set_index(["customer_id", "order_id"], inplace=True)
 
-        output_df = _validate_orders(mock_combined_df)
+        output_df = _remove_orders_without_barcodes(mock_combined_df)
         assert len(output_df) == 4
         assert output_df.iloc[1].values[0] == 11_111_111_318
         assert output_df.iloc[2].values[0] == 11_111_111_429
