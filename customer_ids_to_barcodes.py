@@ -86,11 +86,11 @@ def _log_the_amount_of_unused_barcodes(
     validated_barcodes_df: DataFrame,
 ) -> Union[DataFrame, Exception]:
     try:
-        nan_indexes = validated_barcodes_df.loc[[np.nan]]
+        nan_indexes = pd.DataFrame(validated_barcodes_df.loc[np.nan])
         logging.info("Amount of unused barcodes: %i", len(nan_indexes))
         return nan_indexes
 
-    except KeyError as exception:
+    except (KeyError, TypeError) as exception:
         return exception
 
 

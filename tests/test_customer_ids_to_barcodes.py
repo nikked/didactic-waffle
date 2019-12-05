@@ -1,6 +1,7 @@
 import os
 import json
 from time import time
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
@@ -93,7 +94,24 @@ class TestLogTheAmountOfUnusedBarcodes:
 
         assert isinstance(response, DataFrame)
         assert len(response) == 1
-        assert response.iloc[0]["barcode"] == 11_111_111_116
+        assert response.iloc[0][np.nan] == 11_111_111_116
+
+    def test_type_error_raised_if_fully_int_index(self) -> None:
+        mock_bardcodes = pd.DataFrame(
+            [
+                [11_111_111_111, 10],
+                [11_111_111_111, 11],
+                [11_111_111_116, 14],
+                [11_111_111_116, 15],
+            ],
+            columns=["barcode", "order_id"],
+        )
+
+        mock_bardcodes.set_index("order_id", drop=True, inplace=True)
+
+        response = _log_the_amount_of_unused_barcodes(mock_bardcodes)
+
+        assert isinstance(response, TypeError)
 
     def test_key_error_raised_if_no_nans(self) -> None:
         mock_bardcodes = pd.DataFrame(
@@ -101,7 +119,7 @@ class TestLogTheAmountOfUnusedBarcodes:
                 [11_111_111_111, 10],
                 [11_111_111_111, 11],
                 [11_111_111_116, 14],
-                [11_111_111_116, 15],
+                [11_111_111_116, 15.0],
             ],
             columns=["barcode", "order_id"],
         )
