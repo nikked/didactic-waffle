@@ -11,8 +11,7 @@ DATA_DIRECTORY = "./assignment_data"
 
 
 def create_customer_to_tickets_csv(
-    output_filepath: str = "./customer_ids_to_barcodes.csv",
-    keep_barcodes_with_order_ids: bool = True,
+    output_filepath: str, keep_barcodes_with_order_ids: bool, no_of_top_customers: int,
 ) -> None:
     """
     This function combines barcodes.csv and orders.csv into a new csv file that maps
@@ -46,7 +45,7 @@ def create_customer_to_tickets_csv(
     )
 
     _log_customers_that_bought_most_tickets(
-        customers_to_barcodes_series, no_of_customers=5
+        customers_to_barcodes_series, no_of_top_customers
     )
 
     _write_output_as_csv(customers_to_barcodes_series, output_filepath)
@@ -127,7 +126,7 @@ def _remove_orders_without_barcodes(combined_df: DataFrame) -> DataFrame:
 
 
 def _log_customers_that_bought_most_tickets(
-    customers_to_barcodes_series: Series, no_of_customers: int = 5
+    customers_to_barcodes_series: Series, no_of_top_customers: int = 5
 ) -> DataFrame:
 
     customer_to_barcodes_df = pd.DataFrame(customers_to_barcodes_series)
@@ -141,7 +140,7 @@ def _log_customers_that_bought_most_tickets(
     )
 
     logging.info("Customers with most tickets bought:")
-    for customer_id in customer_to_barcodes_df.index[:no_of_customers]:
+    for customer_id in customer_to_barcodes_df.index[:no_of_top_customers]:
         logging.info(
             "Customer id: %s, Amount of tickets: %s",
             customer_id,
@@ -171,6 +170,13 @@ if __name__ == "__main__":
         order_ids will be dropped instead.""",
     )
     PARSER.add_argument(
+        "-n",
+        "--no_of_top_customers",
+        type=int,
+        default=5,
+        help="The number of top customers logged",
+    )
+    PARSER.add_argument(
         "-o",
         "--output_filepath",
         type=str,
@@ -182,4 +188,5 @@ if __name__ == "__main__":
     create_customer_to_tickets_csv(
         output_filepath=ARGS.output_filepath,
         keep_barcodes_with_order_ids=ARGS.prioritize_barcodes_without_order_ids,
+        no_of_top_customers=ARGS.no_of_top_customers,
     )

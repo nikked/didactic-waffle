@@ -21,7 +21,11 @@ class TestCreateCustomerToTicketsCsv:  # pylint: disable=too-few-public-methods
         test_filename = f"test_file_{time()}.csv"
         test_filepath = os.path.join("tests", test_filename)
 
-        create_customer_to_tickets_csv(test_filepath)
+        create_customer_to_tickets_csv(
+            output_filepath=test_filepath,
+            keep_barcodes_with_order_ids=True,
+            no_of_top_customers=5,
+        )
         output_df = pd.read_csv(test_filepath)
         output_df.set_index("order_id", inplace=True)
 
