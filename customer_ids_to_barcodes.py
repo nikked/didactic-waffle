@@ -84,13 +84,13 @@ def _remove_duplicate_barcodes(barcodes_df: DataFrame) -> DataFrame:
 
 def _log_the_amount_of_unused_barcodes(
     validated_barcodes_df: DataFrame,
-) -> Union[Series, Exception]:
+) -> Union[DataFrame, Exception]:
     try:
-        nan_indexes = validated_barcodes_df.loc[np.nan]
+        nan_indexes = validated_barcodes_df.loc[[np.nan]]
         logging.info("Amount of unused barcodes: %i", len(nan_indexes))
         return nan_indexes
 
-    except (KeyError, TypeError) as exception:
+    except KeyError as exception:
         return exception
 
 
