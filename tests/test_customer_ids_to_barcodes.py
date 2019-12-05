@@ -2,7 +2,7 @@ import os
 import json
 from time import time
 import pandas as pd
-from pandas import Series, DataFrame
+from pandas import DataFrame
 
 from customer_ids_to_barcodes import (
     create_customer_to_tickets_csv,
@@ -91,11 +91,11 @@ class TestLogTheAmountOfUnusedBarcodes:
 
         response = _log_the_amount_of_unused_barcodes(mock_bardcodes)
 
-        assert isinstance(response, Series)
+        assert isinstance(response, DataFrame)
         assert len(response) == 1
-        assert response.iloc[0] == 11_111_111_116
+        assert response.iloc[0]["barcode"] == 11_111_111_116
 
-    def test_type_error_raised_if_fully_int_index(self) -> None:
+    def test_key_error_raised_if_no_nans(self) -> None:
         mock_bardcodes = pd.DataFrame(
             [
                 [11_111_111_111, 10],
@@ -110,27 +110,10 @@ class TestLogTheAmountOfUnusedBarcodes:
 
         response = _log_the_amount_of_unused_barcodes(mock_bardcodes)
 
-        assert isinstance(response, TypeError)
-
-    def test_key_error_raised_if_no_nans(self) -> None:
-        mock_bardcodes = pd.DataFrame(
-            [
-                [11_111_111_111, 10.0],
-                [11_111_111_111, 11.0],
-                [11_111_111_116, 14.0],
-                [11_111_111_116, 15.0],
-            ],
-            columns=["barcode", "order_id"],
-        )
-
-        mock_bardcodes.set_index("order_id", drop=True, inplace=True)
-
-        response = _log_the_amount_of_unused_barcodes(mock_bardcodes)
-
         assert isinstance(response, KeyError)
 
 
-class TestValidateOrders:  # pylint: disable=too-few-public-methods
+class TestRemoveOrdersWithoutBarcodes:
     def test_remove_orders_without_barcodes_removes_rows_without_barcodes(self) -> None:
         mock_combined_df = pd.DataFrame(
             [
@@ -149,6 +132,23 @@ class TestValidateOrders:  # pylint: disable=too-few-public-methods
         assert len(output_df) == 4
         assert output_df.iloc[1].values[0] == 11_111_111_318
         assert output_df.iloc[2].values[0] == 11_111_111_429
+
+    def test_nothing_removed_if_all_orders_have_barcodes(self) -> None:
+        mock_combined_df = pd.DataFrame(
+            [
+                [10, 1, 11_111_111_428],
+                [11, 2, 11_111_111_318],
+                [13, 4, 11_111_111_429],
+                [14, 5, 11_111_111_319],
+            ],
+            columns=["customer_id", "order_id", "barcode"],
+        )
+
+        mock_combined_df.set_index(["customer_id", "order_id"], inplace=True)
+
+        output_df = _remove_orders_without_barcodes(mock_combined_df)
+
+        assert output_df.equals(mock_combined_df)
 
 
 class TestMakeCustomersToBarcodesSeries:  # pylint: disable=too-few-public-methods
