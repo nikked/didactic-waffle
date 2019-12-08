@@ -16,7 +16,7 @@ creates and output `.csv` file on the root of the repository:
 ```
 customer_ids_to_barcodes.csv
 ```
-The process creates prints the following lines using the [Python standard logging API:](https://docs.python.org/3/library/logging.html)
+The process prints the following lines using the [Python standard logging API:](https://docs.python.org/3/library/logging.html)
 
 ```
 ERROR:root:Found 5 duplicated barcodes:
@@ -41,7 +41,7 @@ INFO:root:Writing output to filepath: ./customer_ids_to_barcodes.csv
 
 
 ### Optional arguments
-Please run `python customer_ids_to_barcodes.py -h` to see a full list of accepted arguments/
+Please run `python customer_ids_to_barcodes.py -h` to see a full list of accepted arguments.
 
 #### --pb, --prioritize_barcodes_without_order_ids
 > Default: False
