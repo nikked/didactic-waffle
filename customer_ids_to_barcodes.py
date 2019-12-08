@@ -24,6 +24,9 @@ def create_customer_to_tickets_csv(
 
     Args:
         output_filepath (str): The filepath where the output csv file is stored
+        keep_barcodes_with_order_ids (bool): If set true, orders with barcodes will be kept
+            if there are duplicates.
+        no_of_top_customers (int): The amount of top customers logged
     """
     barcodes_df = _get_csv_as_dataframe(
         filepath=os.path.join(DATA_DIRECTORY, "barcodes.csv"), index="order_id"
@@ -139,7 +142,7 @@ def _log_customers_that_bought_most_tickets(
         by="no_of_tickets", inplace=True, ascending=False
     )
 
-    logging.info("Customers with most tickets bought:")
+    logging.info("Top %i customers with most tickets bought:", no_of_top_customers)
     for customer_id in customer_to_barcodes_df.index[:no_of_top_customers]:
         logging.info(
             "Customer id: %s, Amount of tickets: %s",
