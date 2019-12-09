@@ -12,7 +12,7 @@ This project exposes a single CLI: `customer_ids_to_barcodes.py`. Running it:
 ```
 python customer_ids_to_barcodes.py
 ```
-creates a output `.csv` file on the root of the repository:
+creates an output `.csv` file on the root of the repository:
 ```
 customer_ids_to_barcodes.csv
 ```
